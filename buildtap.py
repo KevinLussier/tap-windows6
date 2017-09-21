@@ -31,8 +31,15 @@ class BuildTAPWindows(object):
         self.codesign = opt.codesign
         self.sign_cn = opt.cert
         self.sign_cert = opt.certfile
+        if opt.certstore:
+            self.sign_store = opt.certstore
+        else:
+            self.sign_store = "my"
         self.cert_pw = opt.certpw
-        self.crosscert = os.path.join(self.top, opt.crosscert)
+        if opt.crosscert:
+            self.crosscert = os.path.join(self.top, opt.crosscert)
+        else:
+            self.crosscert = ""
 
         self.inf2cat_cmd = os.path.join(self.ddk_path, 'bin', 'selfsign', 'Inf2Cat')
         self.signtool_cmd = os.path.join(self.ddk_path, 'bin', 'x86', 'SignTool')
@@ -424,15 +431,23 @@ class BuildTAPWindows(object):
             if self.cert_pw:
                 certspec += "/p '%s' " % self.cert_pw
         else:
-            certspec += "/s my /n '%s' " % self.sign_cn
+            certspec += "/s \"%s\" /n \"%s\" " % (self.sign_store, self.sign_cn)
 
-        self.system("%s sign /v /ac %s %s /t %s %s" % (
-                self.signtool_cmd,
-                self.crosscert,
-                certspec,
-                self.timestamp_server,
-                file,
-            ))
+        if self.crosscert:
+            self.system("%s sign /v /ac %s %s /t %s %s" % (
+                    self.signtool_cmd,
+                    self.crosscert,
+                    certspec,
+                    self.timestamp_server,
+                    file,
+                ))
+        else:
+            self.system("%s sign /v %s /t %s %s" % (
+                    self.signtool_cmd,
+                    certspec,
+                    self.timestamp_server,
+                    file,
+                ))
 
     def sign_driver(self, x64):
         self.sign(self.drvfile(x64, '.cat'))
@@ -490,6 +505,8 @@ if __name__ == '__main__':
                   help="Path to the code signing certificate")
     op.add_option("--certpw", dest="certpw", metavar="CERTPW",
                   help="Password for the code signing certificate/key (optional)")
+    op.add_option("--certstore", dest="certstore", metavar="CERTSTORE",
+                  help="Certificate store for the code signing certificate/key (optional)")
     op.add_option("--crosscert", dest="crosscert", metavar="CERT",
 	              default=crosscert,
 				  help="The cross-certificate file to use, default=%s" % (crosscert,))
