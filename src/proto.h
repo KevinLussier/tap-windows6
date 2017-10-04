@@ -37,6 +37,15 @@ typedef unsigned char MACADDR[MACADDR_SIZE];
 typedef unsigned long IPADDR;
 typedef unsigned char IPV6ADDR[16];
 
+# define IPPROTO_HOPOPT   0  /* IPv6 Hop-by-Hop option */
+# define IPPROTO_UDP     17  /* UDP protocol */
+# define IPPROTO_TCP      6  /* TCP protocol */
+# define IPPROTO_ICMP     1  /* ICMP protocol */
+# define IPPROTO_IGMP     2  /* IGMP protocol */
+# define IPPROTO_ESP     50  /* ESP protocol */
+# define IPPROTO_AH      51  /* AH protocol */
+# define IPPROTO_ICMPV6  58  /* IPv6 ICMP protocol */
+
 //-----------------
 // Ethernet address
 //-----------------
@@ -108,10 +117,6 @@ typedef struct {
 
   UCHAR    ttl;
 
-# define IPPROTO_UDP  17  /* UDP protocol */
-# define IPPROTO_TCP   6  /* TCP protocol */
-# define IPPROTO_ICMP  1  /* ICMP protocol */
-# define IPPROTO_IGMP  2  /* IGMP protocol */
   UCHAR    protocol;
 
   USHORT   check;
@@ -164,15 +169,24 @@ typedef struct {
 #define	TCPOPT_MAXSEG  2
 #define TCPOLEN_MAXSEG 4
 
+//-----------
+// Common UDP/TCP header fields
+//-----------
+
+typedef struct {
+	USHORT   source;
+	USHORT   dest;
+} UDPTCPHDR;
+
 //------------
 // IPv6 Header
 //------------
 
 typedef struct {
+# define IPV6H_GET_VER(v) (((v) >> 4) & 0x0F)
   UCHAR    version_prio;
   UCHAR    flow_lbl[3];
   USHORT   payload_len;
-# define IPPROTO_ICMPV6  0x3a  /* ICMP protocol v6 */
   UCHAR    nexthdr;
   UCHAR    hop_limit;
   IPV6ADDR saddr;

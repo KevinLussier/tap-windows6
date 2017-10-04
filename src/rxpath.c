@@ -71,8 +71,8 @@ IndicateReceivePacket(
     //
     if(tapAdapterSendAndReceiveReady(Adapter) != NDIS_STATUS_SUCCESS)
     {
-        DEBUGP (("[%s] Lying send in IndicateReceivePacket while adapter paused\n",
-            MINIPORT_INSTANCE_ID (Adapter)));
+        DEBUGE ("[%s] Lying send in IndicateReceivePacket while adapter paused\n",
+            MINIPORT_INSTANCE_ID (Adapter));
 
         return;
     }
@@ -158,8 +158,8 @@ IndicateReceivePacket(
             }
             else
             {
-                DEBUGP (("[%s] NdisAllocateNetBufferAndNetBufferList failed in IndicateReceivePacket\n",
-                    MINIPORT_INSTANCE_ID (Adapter)));
+                DEBUGE ("[%s] NdisAllocateNetBufferAndNetBufferList failed in IndicateReceivePacket\n",
+                    MINIPORT_INSTANCE_ID (Adapter));
                 NOTE_ERROR ();
 
                 NdisFreeMdl(mdl);
@@ -168,8 +168,8 @@ IndicateReceivePacket(
         }
         else
         {
-            DEBUGP (("[%s] NdisAllocateMdl failed in IndicateReceivePacket\n",
-                MINIPORT_INSTANCE_ID (Adapter)));
+            DEBUGE ("[%s] NdisAllocateMdl failed in IndicateReceivePacket\n",
+                MINIPORT_INSTANCE_ID (Adapter));
             NOTE_ERROR ();
 
             NdisFreeMemory(injectBuffer,0,0);
@@ -177,8 +177,8 @@ IndicateReceivePacket(
     }
     else
     {
-        DEBUGP (("[%s] NdisAllocateMemoryWithTagPriority failed in IndicateReceivePacket\n",
-            MINIPORT_INSTANCE_ID (Adapter)));
+        DEBUGE ("[%s] NdisAllocateMemoryWithTagPriority failed in IndicateReceivePacket\n",
+            MINIPORT_INSTANCE_ID (Adapter));
         NOTE_ERROR ();
     }
 }
@@ -358,8 +358,8 @@ TapDeviceWrite(
     //
     if (!tapAdapterReadAndWriteReady(adapter))
     {
-        //DEBUGP (("[%s] Interface is down in IRP_MJ_WRITE\n",
-        //    MINIPORT_INSTANCE_ID (adapter)));
+        //DEBUGW ("[%s] Interface is down in IRP_MJ_WRITE\n",
+        //    MINIPORT_INSTANCE_ID (adapter));
         //NOTE_ERROR();
 
         Irp->IoStatus.Status = ntStatus = STATUS_CANCELLED;
@@ -374,8 +374,8 @@ TapDeviceWrite(
 
     if (Irp->MdlAddress == NULL)
     {
-        DEBUGP (("[%s] MdlAddress is NULL for IRP_MJ_WRITE\n",
-            MINIPORT_INSTANCE_ID (adapter)));
+        DEBUGE ("[%s] MdlAddress is NULL for IRP_MJ_WRITE\n",
+            MINIPORT_INSTANCE_ID (adapter));
 
         NOTE_ERROR();
         Irp->IoStatus.Status = ntStatus = STATUS_INVALID_PARAMETER;
@@ -397,8 +397,8 @@ TapDeviceWrite(
 
     if (Irp->AssociatedIrp.SystemBuffer == NULL)
     {
-        DEBUGP (("[%s] Could not map address in IRP_MJ_WRITE\n",
-            MINIPORT_INSTANCE_ID (adapter)));
+        DEBUGE ("[%s] Could not map address in IRP_MJ_WRITE\n",
+            MINIPORT_INSTANCE_ID (adapter));
 
         NOTE_ERROR();
         Irp->IoStatus.Status = ntStatus = STATUS_INSUFFICIENT_RESOURCES;
@@ -505,8 +505,8 @@ TapDeviceWrite(
             }
             else
             {
-                DEBUGP (("[%s] NdisMIndicateReceiveNetBufferLists failed in IRP_MJ_WRITE\n",
-                    MINIPORT_INSTANCE_ID (adapter)));
+                DEBUGE ("[%s] NdisMIndicateReceiveNetBufferLists failed in IRP_MJ_WRITE\n",
+                    MINIPORT_INSTANCE_ID (adapter));
                 NOTE_ERROR ();
 
                 // Fail the IRP
@@ -617,8 +617,8 @@ TapDeviceWrite(
                     mdl->Next = NULL;
                     NdisFreeMdl(mdl);
 
-                    DEBUGP (("[%s] NdisMIndicateReceiveNetBufferLists failed in IRP_MJ_WRITE\n",
-                        MINIPORT_INSTANCE_ID (adapter)));
+                    DEBUGE ("[%s] NdisMIndicateReceiveNetBufferLists failed in IRP_MJ_WRITE\n",
+                        MINIPORT_INSTANCE_ID (adapter));
                     NOTE_ERROR ();
 
                     // Fail the IRP
@@ -628,8 +628,8 @@ TapDeviceWrite(
             }
             else
             {
-                DEBUGP (("[%s] NdisAllocateMdl failed in IRP_MJ_WRITE\n",
-                    MINIPORT_INSTANCE_ID (adapter)));
+                DEBUGE ("[%s] NdisAllocateMdl failed in IRP_MJ_WRITE\n",
+                    MINIPORT_INSTANCE_ID (adapter));
                 NOTE_ERROR ();
 
                 // Fail the IRP
@@ -639,9 +639,9 @@ TapDeviceWrite(
         }
         else
         {
-            DEBUGP (("[%s] Bad buffer size in IRP_MJ_WRITE, len=%d\n",
+            DEBUGE ("[%s] Bad buffer size in IRP_MJ_WRITE, len=%d\n",
                 MINIPORT_INSTANCE_ID (adapter),
-                irpSp->Parameters.Write.Length));
+                irpSp->Parameters.Write.Length);
             NOTE_ERROR ();
 
             Irp->IoStatus.Information = 0;	// ETHERNET_HEADER_SIZE;
@@ -650,8 +650,8 @@ TapDeviceWrite(
     }
     else
     {
-        DEBUGP (("[%s] Lying send in IRP_MJ_WRITE while adapter paused\n",
-            MINIPORT_INSTANCE_ID (adapter)));
+        DEBUGE ("[%s] Lying send in IRP_MJ_WRITE while adapter paused\n",
+            MINIPORT_INSTANCE_ID (adapter));
 
         ntStatus = STATUS_SUCCESS;
     }

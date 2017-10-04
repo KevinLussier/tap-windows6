@@ -133,7 +133,7 @@ tapAdapterContextAllocate(
 
         if (adapter->ReceiveNblPool == NULL)
         {
-            DEBUGP (("[TAP] Couldn't allocate adapter receive NBL pool\n"));
+            DEBUGE ("[TAP] Couldn't allocate adapter receive NBL pool\n");
             NdisFreeMemory(adapter,0,0);
         }
 
@@ -213,7 +213,7 @@ tapReadConfiguration(
     NDIS_CONFIGURATION_OBJECT   configObject;
     NDIS_HANDLE                 configHandle;
 
-    DEBUGP (("[TAP] --> tapReadConfiguration\n"));
+    DEBUGT ("[TAP] --> tapReadConfiguration\n");
 
     //
     // Setup defaults in case configuration cannot be opened.
@@ -276,10 +276,10 @@ tapReadConfiguration(
         if (status == NDIS_STATUS_SUCCESS)
         {
             if (configParameter->ParameterType == NdisParameterString
-		&& configParameter->ParameterData.StringData.Length <= sizeof(Adapter->NetCfgInstanceIdBuffer) - sizeof(WCHAR))
+               && configParameter->ParameterData.StringData.Length <= sizeof(Adapter->NetCfgInstanceIdBuffer) - sizeof(WCHAR))
             {
-                DEBUGP (("[TAP] NdisReadConfiguration (NetCfgInstanceId=%wZ)\n",
-                    &configParameter->ParameterData.StringData ));
+                DEBUGT ("[TAP] NdisReadConfiguration (NetCfgInstanceId=%wZ)\n",
+                    &configParameter->ParameterData.StringData );
 
                 // Save NetCfgInstanceId as UNICODE_STRING.
                 Adapter->NetCfgInstanceId.Length = Adapter->NetCfgInstanceId.MaximumLength
@@ -300,19 +300,19 @@ tapReadConfiguration(
                         TRUE) != STATUS_SUCCESS
                     )
                 {
-                    DEBUGP (("[TAP] NetCfgInstanceId ANSI name conversion failed\n"));
+                    DEBUGE ("[TAP] NetCfgInstanceId ANSI name conversion failed\n");
                     status = NDIS_STATUS_RESOURCES;
                 }
             }
             else
             {
-                DEBUGP (("[TAP] NetCfgInstanceId has invalid type\n"));
+                DEBUGE ("[TAP] NetCfgInstanceId has invalid type\n");
                 status = NDIS_STATUS_INVALID_DATA;
             }
         }
         else
         {
-            DEBUGP (("[TAP] NetCfgInstanceId failed\n"));
+            DEBUGE ("[TAP] NetCfgInstanceId failed\n");
             status = NDIS_STATUS_INVALID_DATA;
         }
 
@@ -360,10 +360,10 @@ tapReadConfiguration(
                 }
             }
 
-            DEBUGP (("[%s] Using MTU %d\n",
+            DEBUGT ("[%s] Using MTU %d\n",
                 MINIPORT_INSTANCE_ID (Adapter),
                 Adapter->MtuSize
-                ));
+                );
 
             // Read MediaStatus setting from registry.
             NdisReadConfiguration (
@@ -381,8 +381,8 @@ tapReadConfiguration(
                     if(configParameter->ParameterData.IntegerData == 0)
                     {
                         // Connect state is appplication controlled.
-                        DEBUGP(("[%s] Initial MediaConnectState: Application Controlled\n",
-                            MINIPORT_INSTANCE_ID (Adapter)));
+                        DEBUGT("[%s] Initial MediaConnectState: Application Controlled\n",
+                            MINIPORT_INSTANCE_ID (Adapter));
 
                         Adapter->MediaStateAlwaysConnected = FALSE;
                         Adapter->LogicalMediaState = FALSE;
@@ -390,8 +390,8 @@ tapReadConfiguration(
                     else
                     {
                         // Connect state is always connected.
-                        DEBUGP(("[%s] Initial MediaConnectState: Always Connected\n",
-                            MINIPORT_INSTANCE_ID (Adapter)));
+                        DEBUGT("[%s] Initial MediaConnectState: Always Connected\n",
+                            MINIPORT_INSTANCE_ID (Adapter));
 
                         Adapter->MediaStateAlwaysConnected = TRUE;
                         Adapter->LogicalMediaState = TRUE;
@@ -406,28 +406,26 @@ tapReadConfiguration(
                 Adapter->PermanentAddress
                 );
 
-            DEBUGP (("[%s] Using MAC PermanentAddress %2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n",
+            DEBUGT ("[%s] Using MAC PermanentAddress %2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n",
                 MINIPORT_INSTANCE_ID (Adapter),
                 Adapter->PermanentAddress[0],
                 Adapter->PermanentAddress[1],
                 Adapter->PermanentAddress[2],
                 Adapter->PermanentAddress[3],
                 Adapter->PermanentAddress[4],
-                Adapter->PermanentAddress[5])
-                );
+                Adapter->PermanentAddress[5]);
 
             // Now seed the current MAC address with the permanent address.
             ETH_COPY_NETWORK_ADDRESS(Adapter->CurrentAddress, Adapter->PermanentAddress);
 
-            DEBUGP (("[%s] Using MAC CurrentAddress %2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n",
+            DEBUGT ("[%s] Using MAC CurrentAddress %2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x\n",
                 MINIPORT_INSTANCE_ID (Adapter),
                 Adapter->CurrentAddress[0],
                 Adapter->CurrentAddress[1],
                 Adapter->CurrentAddress[2],
                 Adapter->CurrentAddress[3],
                 Adapter->CurrentAddress[4],
-                Adapter->CurrentAddress[5])
-                );
+                Adapter->CurrentAddress[5]);
 
             // Read optional AllowNonAdmin setting from registry.
 #if ENABLE_NONADMIN
@@ -454,10 +452,10 @@ tapReadConfiguration(
     }
     else
     {
-        DEBUGP (("[TAP] Couldn't open adapter registry\n"));
+        DEBUGW ("[TAP] Couldn't open adapter registry\n");
     }
 
-    DEBUGP (("[TAP] <-- tapReadConfiguration; status = %8.8X\n",status));
+    DEBUGT ("[TAP] <-- tapReadConfiguration; status = %8.8X\n",status);
 
     return status;
 }
@@ -590,7 +588,7 @@ Return Value:
 {
     NDIS_STATUS status;
 
-    DEBUGP (("[TAP] --> AdapterSetOptions\n"));
+    DEBUGT ("[TAP] --> AdapterSetOptions\n");
 
     //
     // Set any optional handlers by filling out the appropriate struct and
@@ -599,7 +597,7 @@ Return Value:
 
     status = NDIS_STATUS_SUCCESS;
 
-    DEBUGP (("[TAP] <-- AdapterSetOptions; status = %8.8X\n",status));
+    DEBUGT ("[TAP] <-- AdapterSetOptions; status = %8.8X\n",status);
 
     return status;
 }
@@ -617,7 +615,7 @@ AdapterCreate(
     UNREFERENCED_PARAMETER(MiniportDriverContext);
     UNREFERENCED_PARAMETER(MiniportInitParameters);
 
-    DEBUGP (("[TAP] --> AdapterCreate\n"));
+    DEBUGT ("[TAP] --> AdapterCreate\n");
 
     do
     {
@@ -635,13 +633,13 @@ AdapterCreate(
 
         if(adapter == NULL)
         {
-            DEBUGP (("[TAP] Couldn't allocate adapter memory\n"));
+            DEBUGE ("[TAP] Couldn't allocate adapter memory\n");
             status = NDIS_STATUS_RESOURCES;
             break;
         }
 
         // Enter the Initializing state.
-        DEBUGP (("[TAP] Miniport State: Initializing\n"));
+        DEBUGT ("[TAP] Miniport State: Initializing\n");
 
         tapAdapterAcquireLock(adapter,FALSE);
         adapter->Locked.AdapterState = MiniportInitializingState;
@@ -677,7 +675,7 @@ AdapterCreate(
 
         if (status != NDIS_STATUS_SUCCESS)
         {
-            DEBUGP (("[TAP] NdisSetOptionalHandlers failed; Status 0x%08x\n",status));
+            DEBUGE ("[TAP] NdisSetOptionalHandlers failed; Status 0x%08x\n",status);
             break;
         }
 
@@ -712,15 +710,15 @@ AdapterCreate(
 
         if(adapter->MediaStateAlwaysConnected)
         {
-            DEBUGP(("[%s] Initial MediaConnectState: Connected\n",
-                MINIPORT_INSTANCE_ID (adapter)));
+            DEBUGT("[%s] Initial MediaConnectState: Connected\n",
+                MINIPORT_INSTANCE_ID (adapter));
 
             genAttributes.MediaConnectState = MediaConnectStateConnected;
         }
         else
         {
-            DEBUGP(("[%s] Initial MediaConnectState: Disconnected\n",
-                MINIPORT_INSTANCE_ID (adapter)));
+            DEBUGT("[%s] Initial MediaConnectState: Disconnected\n",
+                MINIPORT_INSTANCE_ID (adapter));
 
             genAttributes.MediaConnectState = MediaConnectStateDisconnected;
         }
@@ -810,7 +808,7 @@ AdapterCreate(
 
         if (status != NDIS_STATUS_SUCCESS)
         {
-            DEBUGP (("[TAP] NdisMSetMiniportAttributes failed; Status 0x%08x\n",status));
+            DEBUGE ("[TAP] NdisMSetMiniportAttributes failed; Status 0x%08x\n",status);
             break;
         }
 
@@ -826,7 +824,7 @@ AdapterCreate(
         }
         else
         {
-            DEBUGP (("[TAP] CreateTapDevice failed; Status 0x%08x\n",status));
+            DEBUGE ("[TAP] CreateTapDevice failed; Status 0x%08x\n",status);
             break;
         }
     } while(FALSE);
@@ -834,7 +832,7 @@ AdapterCreate(
     if(status == NDIS_STATUS_SUCCESS)
     {
         // Enter the Paused state if initialization is complete.
-        DEBUGP (("[TAP] Miniport State: Paused\n"));
+        DEBUGT ("[TAP] Miniport State: Paused\n");
 
         tapAdapterAcquireLock(adapter,FALSE);
         adapter->Locked.AdapterState = MiniportPausedState;
@@ -844,7 +842,7 @@ AdapterCreate(
     {
         if(adapter != NULL)
         {
-            DEBUGP (("[TAP] Miniport State: Halted\n"));
+            DEBUGT ("[TAP] Miniport State: Halted\n");
 
             //
             // Remove reference when adapter context was allocated
@@ -857,7 +855,7 @@ AdapterCreate(
         }
     }
 
-    DEBUGP (("[TAP] <-- AdapterCreate; status = %8.8X\n",status));
+    DEBUGT ("[TAP] <-- AdapterCreate; status = %8.8X\n",status);
 
     return status;
 }
@@ -903,10 +901,10 @@ Return Value:
 
     UNREFERENCED_PARAMETER(HaltAction);
 
-    DEBUGP (("[TAP] --> AdapterHalt\n"));
+    DEBUGT ("[TAP] --> AdapterHalt\n");
 
     // Enter the Halted state.
-    DEBUGP (("[TAP] Miniport State: Halted\n"));
+    DEBUGT ("[TAP] Miniport State: Halted\n");
 
     tapAdapterAcquireLock(adapter,FALSE);
     adapter->Locked.AdapterState = MiniportHaltedState;
@@ -933,7 +931,7 @@ Return Value:
     tapAdapterContextDereference(adapter);
     adapter = NULL;
 
-    DEBUGP (("[TAP] <-- AdapterHalt\n"));
+    DEBUGT ("[TAP] <-- AdapterHalt\n");
 }
 
 VOID
@@ -980,16 +978,16 @@ tapWaitForReceiveNblInFlightCountZeroEvent(
                 break;
             }
 
-            DEBUGP (("[%s] Waiting for %d in-flight receive NBLs to be returned.\n",
+            DEBUGT ("[%s] Waiting for %d in-flight receive NBLs to be returned.\n",
                 MINIPORT_INSTANCE_ID (Adapter),
                 Adapter->ReceiveNblInFlightCount
-                ));
+                );
         }
 
-        DEBUGP (("[%s] Waited %d ms for all in-flight NBLs to be returned.\n",
+        DEBUGT ("[%s] Waited %d ms for all in-flight NBLs to be returned.\n",
             MINIPORT_INSTANCE_ID (Adapter),
             (currentTime.LowPart - startTime.LowPart)
-            ));
+            );
     }
 }
 
@@ -1046,10 +1044,10 @@ Return Value:
 
     UNREFERENCED_PARAMETER(PauseParameters);
 
-    DEBUGP (("[TAP] --> AdapterPause\n"));
+    DEBUGT ("[TAP] --> AdapterPause\n");
 
     // Enter the Pausing state.
-    DEBUGP (("[TAP] Miniport State: Pausing\n"));
+    DEBUGT ("[TAP] Miniport State: Pausing\n");
 
     tapAdapterAcquireLock(adapter,FALSE);
     adapter->Locked.AdapterState = MiniportPausingState;
@@ -1089,13 +1087,13 @@ Return Value:
     status = NDIS_STATUS_SUCCESS;
 
     // Enter the Paused state.
-    DEBUGP (("[TAP] Miniport State: Paused\n"));
+    DEBUGT ("[TAP] Miniport State: Paused\n");
 
     tapAdapterAcquireLock(adapter,FALSE);
     adapter->Locked.AdapterState = MiniportPausedState;
     tapAdapterReleaseLock(adapter,FALSE);
 
-    DEBUGP (("[TAP] <-- AdapterPause; status = %8.8X\n",status));
+    DEBUGT ("[TAP] <-- AdapterPause; status = %8.8X\n",status);
 
     return status;
 }
@@ -1147,10 +1145,10 @@ Return Value:
 
     UNREFERENCED_PARAMETER(RestartParameters);
 
-    DEBUGP (("[TAP] --> AdapterRestart\n"));
+    DEBUGT ("[TAP] --> AdapterRestart\n");
 
     // Enter the Restarting state.
-    DEBUGP (("[TAP] Miniport State: Restarting\n"));
+    DEBUGT ("[TAP] Miniport State: Restarting\n");
 
     tapAdapterAcquireLock(adapter,FALSE);
     adapter->Locked.AdapterState = MiniportRestartingState;
@@ -1161,7 +1159,7 @@ Return Value:
     if(status == NDIS_STATUS_SUCCESS)
     {
         // Enter the Running state.
-        DEBUGP (("[TAP] Miniport State: Running\n"));
+        DEBUGT ("[TAP] Miniport State: Running\n");
 
         tapAdapterAcquireLock(adapter,FALSE);
         adapter->Locked.AdapterState = MiniportRunning;
@@ -1170,14 +1168,14 @@ Return Value:
     else
     {
         // Enter the Paused state if restart failed.
-        DEBUGP (("[TAP] Miniport State: Paused\n"));
+        DEBUGT ("[TAP] Miniport State: Paused\n");
 
         tapAdapterAcquireLock(adapter,FALSE);
         adapter->Locked.AdapterState = MiniportPausedState;
         tapAdapterReleaseLock(adapter,FALSE);
     }
 
-    DEBUGP (("[TAP] <-- AdapterRestart; status = %8.8X\n",status));
+    DEBUGT ("[TAP] <-- AdapterRestart; status = %8.8X\n",status);
 
     return status;
 }
@@ -1348,9 +1346,9 @@ Return Value:
 {
     PTAP_ADAPTER_CONTEXT   adapter = (PTAP_ADAPTER_CONTEXT )MiniportAdapterContext;
 
-    //DEBUGP (("[TAP] --> AdapterCheckForHangEx\n"));
+    //DEBUGT ("[TAP] --> AdapterCheckForHangEx\n");
 
-    //DEBUGP (("[TAP] <-- AdapterCheckForHangEx; status = FALSE\n"));
+    //DEBUGT ("[TAP] <-- AdapterCheckForHangEx; status = FALSE\n");
 
     return FALSE;   // Everything is fine
 }
@@ -1409,7 +1407,7 @@ Return Value:
     UNREFERENCED_PARAMETER(MiniportAdapterContext);
     UNREFERENCED_PARAMETER(AddressingReset);
 
-    DEBUGP (("[TAP] --> AdapterReset\n"));
+    DEBUGT ("[TAP] --> AdapterReset\n");
 
     // Indicate that adapter reset is in progress.
     adapter->ResetInProgress = TRUE;
@@ -1424,7 +1422,7 @@ Return Value:
 
     status = NDIS_STATUS_SUCCESS;
 
-    DEBUGP (("[TAP] <-- AdapterReset; status = %8.8X\n",status));
+    DEBUGT ("[TAP] <-- AdapterReset; status = %8.8X\n",status);
 
     return status;
 }
@@ -1437,7 +1435,7 @@ AdapterDevicePnpEventNotify(
 {
     PTAP_ADAPTER_CONTEXT   adapter = (PTAP_ADAPTER_CONTEXT )MiniportAdapterContext;
 
-    DEBUGP (("[TAP] --> AdapterDevicePnpEventNotify\n"));
+    DEBUGT ("[TAP] --> AdapterDevicePnpEventNotify\n");
 
 /*
     switch (NetDevicePnPEvent->DevicePnPEvent)
@@ -1448,7 +1446,7 @@ AdapterDevicePnpEventNotify(
             // NDIS calls MiniportHalt function after this call returns.
             //
             MP_SET_FLAG(Adapter, fMP_ADAPTER_SURPRISE_REMOVED);
-            DEBUGP(MP_INFO, "[%p] MPDevicePnpEventNotify: NdisDevicePnPEventSurpriseRemoved\n", Adapter);
+            DEBUGT(MP_INFO, "[%p] MPDevicePnpEventNotify: NdisDevicePnPEventSurpriseRemoved\n", Adapter);
             break;
 
         case NdisDevicePnPEventPowerProfileChanged:
@@ -1459,7 +1457,7 @@ AdapterDevicePnpEventNotify(
             // NDIS calls the miniport's MiniportPnPEventNotify function with
             // PnPEvent set to NdisDevicePnPEventPowerProfileChanged.
             //
-            DEBUGP(MP_INFO, "[%p] MPDevicePnpEventNotify: NdisDevicePnPEventPowerProfileChanged\n", Adapter);
+            DEBUGT(MP_INFO, "[%p] MPDevicePnpEventNotify: NdisDevicePnPEventPowerProfileChanged\n", Adapter);
 
             if (NetDevicePnPEvent->InformationBufferLength == sizeof(ULONG))
             {
@@ -1467,20 +1465,20 @@ AdapterDevicePnpEventNotify(
 
                 if (NdisPowerProfile == NdisPowerProfileBattery)
                 {
-                    DEBUGP(MP_INFO, "[%p] The host system is running on battery power\n", Adapter);
+                    DEBUGT(MP_INFO, "[%p] The host system is running on battery power\n", Adapter);
                 }
                 if (NdisPowerProfile == NdisPowerProfileAcOnLine)
                 {
-                    DEBUGP(MP_INFO, "[%p] The host system is running on AC power\n", Adapter);
+                    DEBUGT(MP_INFO, "[%p] The host system is running on AC power\n", Adapter);
                 }
             }
             break;
 
         default:
-            DEBUGP(MP_ERROR, "[%p] MPDevicePnpEventNotify: unknown PnP event 0x%x\n", Adapter, NetDevicePnPEvent->DevicePnPEvent);
+            DEBUGT(MP_ERROR, "[%p] MPDevicePnpEventNotify: unknown PnP event 0x%x\n", Adapter, NetDevicePnPEvent->DevicePnPEvent);
     }
 */
-    DEBUGP (("[TAP] <-- AdapterDevicePnpEventNotify\n"));
+    DEBUGT ("[TAP] <-- AdapterDevicePnpEventNotify\n");
 }
 
 VOID
@@ -1521,10 +1519,10 @@ Return Value:
     UNREFERENCED_PARAMETER(ShutdownAction);
     UNREFERENCED_PARAMETER(MiniportAdapterContext);
 
-    DEBUGP (("[TAP] --> AdapterShutdownEx\n"));
+    DEBUGT ("[TAP] --> AdapterShutdownEx\n");
 
     // Enter the Shutdown state.
-    DEBUGP (("[TAP] Miniport State: Shutdown\n"));
+    DEBUGT ("[TAP] Miniport State: Shutdown\n");
 
     tapAdapterAcquireLock(adapter,FALSE);
     adapter->Locked.AdapterState = MiniportShutdownState;
@@ -1534,7 +1532,7 @@ Return Value:
     // BUGBUG!!! FlushIrpQueues???
     //
 
-    DEBUGP (("[TAP] <-- AdapterShutdownEx\n"));
+    DEBUGT ("[TAP] <-- AdapterShutdownEx\n");
 }
 
 
@@ -1546,7 +1544,7 @@ tapAdapterContextFree(
 {
     PLIST_ENTRY listEntry = &Adapter->AdapterListLink;
 
-    DEBUGP (("[TAP] --> tapAdapterContextFree\n"));
+    DEBUGT ("[TAP] --> tapAdapterContextFree\n");
 
     // Adapter context should already be removed.
     ASSERT( (listEntry->Flink == listEntry) && (listEntry->Blink == listEntry ) );
@@ -1575,7 +1573,7 @@ tapAdapterContextFree(
 
     NdisFreeMemory(Adapter,0,0);
 
-    DEBUGP (("[TAP] <-- tapAdapterContextFree\n"));
+    DEBUGT ("[TAP] <-- tapAdapterContextFree\n");
 }
 ULONG
 tapGetNetBufferFrameType(
