@@ -105,7 +105,7 @@ Return Value:
 
     PAGED_CODE();
 
-    DEBUGP (("[TAP] --> TapDeviceCreate\n"));
+    DEBUGT ("[TAP] --> TapDeviceCreate\n");
 
     irpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -127,10 +127,10 @@ Return Value:
 
     if(adapter == NULL )
     {
-        DEBUGP (("[TAP] release [%d.%d] open request; adapter not found\n",
+        DEBUGE ("[TAP] release [%d.%d] open request; adapter not found\n",
             TAP_DRIVER_MAJOR_VERSION,
             TAP_DRIVER_MINOR_VERSION
-            ));
+            );
 
         Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST;
         Irp->IoStatus.Information = 0;
@@ -140,12 +140,12 @@ Return Value:
         return STATUS_DEVICE_DOES_NOT_EXIST;
     }
 
-    DEBUGP(("[%s] [TAP] release [%d.%d] open request (TapFileIsOpen=%d)\n",
+    DEBUGT("[%s] [TAP] release [%d.%d] open request (TapFileIsOpen=%d)\n",
         MINIPORT_INSTANCE_ID(adapter),
         TAP_DRIVER_MAJOR_VERSION,
         TAP_DRIVER_MINOR_VERSION,
         adapter->TapFileIsOpen
-        ));
+        );
 
     // Enforce exclusive access
     originalFileObject = InterlockedCompareExchangePointer(
@@ -180,9 +180,9 @@ Return Value:
     }
     else
     {
-        DEBUGP (("[%s] TAP is presently unavailable (TapFileIsOpen=%d)\n",
+        DEBUGT ("[%s] TAP is presently unavailable (TapFileIsOpen=%d)\n",
             MINIPORT_INSTANCE_ID(adapter), adapter->TapFileIsOpen
-            ));
+            );
 
         NOTE_ERROR();
 
@@ -196,7 +196,7 @@ Return Value:
 
     IoCompleteRequest( Irp, IO_NO_INCREMENT );
 
-    DEBUGP (("[TAP] <-- TapDeviceCreate; status = %8.8X\n",status));
+    DEBUGT ("[TAP] <-- TapDeviceCreate; status = %8.8X\n",status);
 
     return status;
 }
@@ -262,13 +262,13 @@ tapSetMediaConnectStatus(
         {
             linkState.MediaConnectState = MediaConnectStateConnected;
 
-            DEBUGP (("[TAP] Set MediaConnectState: Connected.\n"));
+            DEBUGI ("[TAP] Set MediaConnectState: Connected.\n");
         }
         else
         {
             linkState.MediaConnectState = MediaConnectStateDisconnected;
 
-            DEBUGP (("[TAP] Set MediaConnectState: Disconnected.\n"));
+            DEBUGI ("[TAP] Set MediaConnectState: Disconnected.\n");
         }
     }
 
@@ -466,7 +466,7 @@ Return Value:
 
                 Irp->IoStatus.Information = 1; // Simple boolean value
 
-                DEBUGP (("[TAP] Set TUN mode.\n"));
+                DEBUGI ("[TAP] Set TUN mode.\n");
             }
             else
             {
@@ -505,7 +505,7 @@ Return Value:
 
                 Irp->IoStatus.Information = 1; // Simple boolean value
 
-                DEBUGP (("[TAP] Set P2P mode.\n"));
+                DEBUGI ("[TAP] Set P2P mode.\n");
             }
             else
             {
@@ -550,7 +550,7 @@ Return Value:
 
                 Irp->IoStatus.Information = 1; // Simple boolean value
 
-                DEBUGP (("[TAP] Configured DHCP MASQ.\n"));
+                DEBUGI ("[TAP] Configured DHCP MASQ.\n");
             }
             else
             {
@@ -578,7 +578,7 @@ Return Value:
 
                 Irp->IoStatus.Information = 1; // Simple boolean value
 
-                DEBUGP (("[TAP] Set DHCP OPT.\n"));
+                DEBUGI ("[TAP] Set DHCP OPT.\n");
             }
             else
             {
@@ -736,8 +736,8 @@ tapFlushIrpQueues(
     )
 {
 
-    DEBUGP (("[TAP] tapFlushIrpQueues: Flushing %d pending read IRPs\n",
-        Adapter->PendingReadIrpQueue.Count));
+    DEBUGT ("[TAP] tapFlushIrpQueues: Flushing %d pending read IRPs\n",
+        Adapter->PendingReadIrpQueue.Count);
 
     tapIrpCsqFlush(&Adapter->PendingReadIrpQueue);
 }
@@ -787,7 +787,7 @@ Return Value:
 
     PAGED_CODE();
 
-    DEBUGP (("[TAP] --> TapDeviceCleanup\n"));
+    DEBUGT ("[TAP] --> TapDeviceCleanup\n");
 
     irpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -803,10 +803,10 @@ Return Value:
 
     if(adapter == NULL )
     {
-        DEBUGP (("[TAP] release [%d.%d] cleanup request; adapter not found\n",
+        DEBUGW ("[TAP] release [%d.%d] cleanup request; adapter not found\n",
             TAP_DRIVER_MAJOR_VERSION,
             TAP_DRIVER_MINOR_VERSION
-            ));
+            );
     }
 
     if(adapter != NULL )
@@ -842,7 +842,7 @@ Return Value:
 
     IoCompleteRequest( Irp, IO_NO_INCREMENT );
 
-    DEBUGP (("[TAP] <-- TapDeviceCleanup; status = %8.8X\n",status));
+    DEBUGT ("[TAP] <-- TapDeviceCleanup; status = %8.8X\n",status);
 
     return status;
 }
@@ -883,7 +883,7 @@ Return Value:
 
     PAGED_CODE();
 
-    DEBUGP (("[TAP] --> TapDeviceClose\n"));
+    DEBUGT ("[TAP] --> TapDeviceClose\n");
 
     irpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -899,10 +899,10 @@ Return Value:
 
     if(adapter == NULL )
     {
-        DEBUGP (("[TAP] release [%d.%d] close request; adapter not found\n",
+        DEBUGW ("[TAP] release [%d.%d] close request; adapter not found\n",
             TAP_DRIVER_MAJOR_VERSION,
             TAP_DRIVER_MINOR_VERSION
-            ));
+            );
     }
 
     if(adapter != NULL )
@@ -932,7 +932,7 @@ Return Value:
 
     IoCompleteRequest( Irp, IO_NO_INCREMENT );
 
-    DEBUGP (("[TAP] <-- TapDeviceClose; status = %8.8X\n",status));
+    DEBUGT ("[TAP] <-- TapDeviceClose; status = %8.8X\n",status);
 
     return status;
 }
@@ -1020,18 +1020,18 @@ CreateTapDevice(
     NDIS_DEVICE_OBJECT_ATTRIBUTES   deviceAttribute;
     PDRIVER_DISPATCH                dispatchTable[IRP_MJ_MAXIMUM_FUNCTION+1];
 
-    DEBUGP (("[TAP] version [%d.%d] creating tap device: %wZ\n",
+    DEBUGT ("[TAP] version [%d.%d] creating tap device: %wZ\n",
         TAP_DRIVER_MAJOR_VERSION,
         TAP_DRIVER_MINOR_VERSION,
-        &Adapter->NetCfgInstanceId));
+        &Adapter->NetCfgInstanceId);
 
     // Generate DeviceName and LinkName from NetCfgInstanceId.
     status = tapMakeDeviceNames(Adapter);
 
     if (NT_SUCCESS(status))
     {
-        DEBUGP (("[TAP] DeviceName: %wZ\n",&Adapter->DeviceName));
-        DEBUGP (("[TAP] LinkName: %wZ\n",&Adapter->LinkName));
+        DEBUGT ("[TAP] DeviceName: %wZ\n",&Adapter->DeviceName);
+        DEBUGT ("[TAP] LinkName: %wZ\n",&Adapter->LinkName);
 
         // Initialize dispatch table.
         NdisZeroMemory(dispatchTable, (IRP_MJ_MAXIMUM_FUNCTION+1) * sizeof(PDRIVER_DISPATCH));
@@ -1096,13 +1096,13 @@ CreateTapDevice(
 
       Adapter->TapDeviceCreated = TRUE;
 
-      DEBUGP (("[%wZ] successfully created TAP device [%wZ]\n",
+      DEBUGT ("[%wZ] successfully created TAP device [%wZ]\n",
 	        &Adapter->NetCfgInstanceId,
             &Adapter->DeviceName
-            ));
+            );
     }
 
-    DEBUGP (("[TAP] <-- CreateTapDevice; status = %8.8X\n",status));
+    DEBUGT ("[TAP] <-- CreateTapDevice; status = %8.8X\n",status);
 
     return status;
 }
@@ -1119,8 +1119,8 @@ DestroyTapDevice(
     __in PTAP_ADAPTER_CONTEXT   Adapter
    )
 {
-    DEBUGP (("[TAP] --> DestroyTapDevice; Adapter: %wZ\n",
-        &Adapter->NetCfgInstanceId));
+    DEBUGT ("[TAP] --> DestroyTapDevice; Adapter: %wZ\n",
+        &Adapter->NetCfgInstanceId);
 
     //
     // Let clients know we are shutting down
@@ -1172,12 +1172,12 @@ DestroyTapDevice(
     //
     if(Adapter->DeviceHandle)
     {
-        DEBUGP (("[TAP] Calling NdisDeregisterDeviceEx\n"));
+        DEBUGT ("[TAP] Calling NdisDeregisterDeviceEx\n");
         NdisDeregisterDeviceEx(Adapter->DeviceHandle);
     }
 
     Adapter->DeviceHandle = NULL;
 
-    DEBUGP (("[TAP] <-- DestroyTapDevice\n"));
+    DEBUGT ("[TAP] <-- DestroyTapDevice\n");
 }
 

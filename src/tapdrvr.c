@@ -80,13 +80,13 @@ Arguments:
 
     UNREFERENCED_PARAMETER(RegistryPath);
 
-    DEBUGP (("[TAP] --> DriverEntry; version [%d.%d] %s %s\n",
+    DEBUGI ("[TAP] --> DriverEntry; version [%d.%d] %s %s\n",
         TAP_DRIVER_MAJOR_VERSION,
         TAP_DRIVER_MINOR_VERSION,
         __DATE__,
-        __TIME__));
+        __TIME__);
 
-    DEBUGP (("[TAP] Registry Path: '%wZ'\n", RegistryPath));
+    DEBUGI ("[TAP] Registry Path: '%wZ'\n", RegistryPath);
 
     //
     // Initialize any driver-global variables here.
@@ -149,7 +149,7 @@ Arguments:
         // is ready for NDIS to call the driver's MiniportSetOptions and
         // MiniportInitializeEx handlers.
         //
-        DEBUGP (("[TAP] Calling NdisMRegisterMiniportDriver...\n"));
+        DEBUGT ("[TAP] Calling NdisMRegisterMiniportDriver...\n");
         //NDIS_DECLARE_MINIPORT_DRIVER_CONTEXT(TAP_GLOBAL);
         status = NdisMRegisterMiniportDriver(
                     DriverObject,
@@ -161,18 +161,18 @@ Arguments:
 
         if (NDIS_STATUS_SUCCESS == status)
         {
-            DEBUGP (("[TAP] Registered miniport successfully\n"));
+            DEBUGT ("[TAP] Registered miniport successfully\n");
         }
         else
         {
-            DEBUGP(("[TAP] NdisMRegisterMiniportDriver failed: %8.8X\n", status));
+            DEBUGE("[TAP] NdisMRegisterMiniportDriver failed: %8.8X\n", status);
             TapDriverUnload(DriverObject);
             status = NDIS_STATUS_FAILURE;
             break;
         }
     } while(FALSE);
 
-    DEBUGP (("[TAP] <-- DriverEntry; status = %8.8X\n",status));
+    DEBUGI ("[TAP] <-- DriverEntry; status = %8.8X\n",status);
 
     return status;
 }
@@ -207,12 +207,12 @@ Return Value:
     PDEVICE_OBJECT deviceObject = DriverObject->DeviceObject;
     UNICODE_STRING uniWin32NameString;
 
-    DEBUGP (("[TAP] --> TapDriverUnload; version [%d.%d] %s %s unloaded\n",
+    DEBUGI ("[TAP] --> TapDriverUnload; version [%d.%d] %s %s unloaded\n",
         TAP_DRIVER_MAJOR_VERSION,
         TAP_DRIVER_MINOR_VERSION,
         __DATE__,
         __TIME__
-        ));
+        );
 
     PAGED_CODE();
 
@@ -227,6 +227,6 @@ Return Value:
         NdisMDeregisterMiniportDriver(GlobalData.NdisDriverHandle);
     }
 
-    DEBUGP (("[TAP] <-- TapDriverUnload\n"));
+    DEBUGT ("[TAP] <-- TapDriverUnload\n");
 }
 

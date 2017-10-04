@@ -87,10 +87,10 @@ icmpv6_checksum(
 // the tap driver needs to answer?"
 // see RFC 4861 4.3 for the different cases
 static IPV6ADDR IPV6_NS_TARGET_MCAST =
-	{ 0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    { 0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
           0x00, 0x00, 0x00, 0x01, 0xff, 0x00, 0x00, 0x08 };
 static IPV6ADDR IPV6_NS_TARGET_UNICAST =
-	{ 0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    { 0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08 };
 
 BOOLEAN
@@ -115,27 +115,27 @@ HandleIPv6NeighborDiscovery(
         memcmp( ipv6->daddr, IPV6_NS_TARGET_UNICAST,
         sizeof(IPV6ADDR) ) != 0 )
     {
-        return FALSE;				// wrong target address
+        return FALSE;                // wrong target address
     }
 
     // IPv6 Next-Header must be ICMPv6
     if ( ipv6->nexthdr != IPPROTO_ICMPV6 )
     {
-        return FALSE;				// wrong next-header
+        return FALSE;                // wrong next-header
     }
 
     // ICMPv6 type+code must be 135/0 for NS
     if ( icmpv6_ns->type != ICMPV6_TYPE_NS ||
         icmpv6_ns->code != ICMPV6_CODE_0 )
     {
-        return FALSE;				// wrong ICMPv6 type
+        return FALSE;                // wrong ICMPv6 type
     }
 
     // ICMPv6 target address must be fe80::8 (magic)
     if ( memcmp( icmpv6_ns->target_addr, IPV6_NS_TARGET_UNICAST,
         sizeof(IPV6ADDR) ) != 0 )
     {
-        return FALSE;				// not for us
+        return FALSE;                // not for us
     }
 
     // packet identified, build magic response packet
@@ -169,7 +169,7 @@ HandleIPv6NeighborDiscovery(
     na->icmpv6.type = ICMPV6_TYPE_NA;
     na->icmpv6.code = ICMPV6_CODE_0;
     na->icmpv6.checksum = 0;
-    na->icmpv6.rso_bits = 0x60;		// Solicited + Override
+    na->icmpv6.rso_bits = 0x60;        // Solicited + Override
     NdisZeroMemory( na->icmpv6.reserved, sizeof(na->icmpv6.reserved) );
     NdisMoveMemory( na->icmpv6.target_addr, IPV6_NS_TARGET_UNICAST,
         sizeof(IPV6ADDR) );
@@ -197,7 +197,7 @@ HandleIPv6NeighborDiscovery(
 
     MemFree (na, sizeof (ICMPV6_NA_PKT));
 
-    return TRUE;				// all fine
+    return TRUE;                // all fine
 }
 
 //===================================================
@@ -407,8 +407,8 @@ tapFlushSendPacketQueue(
     // Process the send packet queue
     KeAcquireSpinLock(&Adapter->SendPacketQueue.QueueLock,&irql);
 
-    DEBUGP (("[TAP] tapFlushSendPacketQueue: Flushing %d TAP packets\n",
-        Adapter->SendPacketQueue.Count));
+    DEBUGT ("[TAP] tapFlushSendPacketQueue: Flushing %d TAP packets\n",
+        Adapter->SendPacketQueue.Count);
 
     while(Adapter->SendPacketQueue.Count > 0 )
     {
@@ -487,7 +487,7 @@ Return Value:
 
     if(tapPacket == NULL)
     {
-        DEBUGP (("[TAP] tapAdapterTransmit: TAP packet allocation failed\n"));
+        DEBUGE ("[TAP] tapAdapterTransmit: TAP packet allocation failed\n");
         return;
     }
 
@@ -511,7 +511,7 @@ Return Value:
 
     if(packetData == NULL)
     {
-        DEBUGP (("[TAP] tapAdapterTransmit: Could not get packet data\n"));
+        DEBUGE ("[TAP] tapAdapterTransmit: Could not get packet data\n");
 
         NdisFreeMemory(tapPacket,0,0);
 
@@ -1105,8 +1105,8 @@ TapDeviceRead(
     //
     if (!tapAdapterReadAndWriteReady(adapter))
     {
-        //DEBUGP (("[%s] Interface is down in IRP_MJ_READ\n",
-        //    MINIPORT_INSTANCE_ID (adapter)));
+        DEBUGW ("[%s] Interface is down in IRP_MJ_READ\n",
+                MINIPORT_INSTANCE_ID (adapter));
         //NOTE_ERROR();
 
         Irp->IoStatus.Status = ntStatus = STATUS_CANCELLED;
@@ -1121,8 +1121,8 @@ TapDeviceRead(
 
     if (Irp->MdlAddress == NULL)
     {
-        DEBUGP (("[%s] MdlAddress is NULL for IRP_MJ_READ\n",
-            MINIPORT_INSTANCE_ID (adapter)));
+        DEBUGE ("[%s] MdlAddress is NULL for IRP_MJ_READ\n",
+            MINIPORT_INSTANCE_ID (adapter));
 
         NOTE_ERROR();
         Irp->IoStatus.Status = ntStatus = STATUS_INVALID_PARAMETER;
@@ -1139,8 +1139,8 @@ TapDeviceRead(
                 ) ) == NULL
         )
     {
-        DEBUGP (("[%s] Could not map address in IRP_MJ_READ\n",
-            MINIPORT_INSTANCE_ID (adapter)));
+        DEBUGE ("[%s] Could not map address in IRP_MJ_READ\n",
+            MINIPORT_INSTANCE_ID (adapter));
 
         NOTE_ERROR();
         Irp->IoStatus.Status = ntStatus = STATUS_INSUFFICIENT_RESOURCES;

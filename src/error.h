@@ -31,7 +31,7 @@ extern int g_LastErrorLineNumber;
 
 // Debug info output
 #define ALSO_DBGPRINT           1
-#define DEBUGP_AT_DISPATCH      1
+#define DEBUG_AT_DISPATCH       1
 
 // Uncomment line below to allow packet dumps
 //#define ALLOW_PACKET_DUMP       1
@@ -54,11 +54,12 @@ typedef struct
     MUTEX lock;
 } DebugOutput;
 
-VOID MyDebugPrint (const unsigned char* format, ...);
+VOID MyDebugPrint (ULONG level, const unsigned char* format, ...);
 
 VOID PrMac (const MACADDR mac);
 
 VOID PrIP (IPADDR ip_addr);
+VOID PrIPV6 (IPV6ADDR ip_addr);
 
 #ifdef ALLOW_PACKET_DUMP
 
@@ -69,6 +70,7 @@ DumpPacket(
     __in unsigned int len
     );
 
+VOID
 DumpPacket2(
     __in const char *prefix,
     __in const ETH_HEADER *eth,
@@ -81,13 +83,12 @@ DumpPacket2(
 #define DUMP_PACKET2(prefix, eth, data, len)
 #endif
 
-#define CAN_WE_PRINT (DEBUGP_AT_DISPATCH || KeGetCurrentIrql () < DISPATCH_LEVEL)
+#define CAN_WE_PRINT (DEBUG_AT_DISPATCH || KeGetCurrentIrql () < DISPATCH_LEVEL)
 
-#if ALSO_DBGPRINT
-#define DEBUGP(fmt) { MyDebugPrint fmt; if (CAN_WE_PRINT) DbgPrint fmt; }
-#else
-#define DEBUGP(fmt) { MyDebugPrint fmt; }
-#endif
+#define DEBUGE(...) MyDebugPrint( DPFLTR_ERROR_LEVEL, __VA_ARGS__ );
+#define DEBUGW(...) MyDebugPrint( DPFLTR_WARNING_LEVEL, __VA_ARGS__ );
+#define DEBUGI(...) MyDebugPrint( DPFLTR_INFO_LEVEL, __VA_ARGS__ );
+#define DEBUGT(...) MyDebugPrint( DPFLTR_TRACE_LEVEL, __VA_ARGS__ );
 
 #ifdef ALLOW_PACKET_DUMP
 
@@ -110,5 +111,10 @@ GetDebugLine (
 #define DEBUGP(fmt)
 #define DUMP_PACKET(prefix, data, len)
 #define DUMP_PACKET2(prefix, eth, data, len)
+
+#define DEBUGE(...)
+#define DEBUGW(...)
+#define DEBUGI(...)
+#define DEBUGT(...)
 
 #endif

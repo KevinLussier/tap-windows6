@@ -33,6 +33,18 @@ int g_LastErrorLineNumber;
 
 #if DBG
 
+#ifndef ETH_P_ARP
+#define ETH_P_ARP 0x0806
+#endif
+
+#ifndef ETH_P_IP
+#define ETH_P_IP 0x0800
+#endif
+
+#ifndef ETH_P_IPV6
+#define ETH_P_IPV6 0x86DD
+#endif
+
 DebugOutput g_Debug;
 
 BOOLEAN
@@ -73,8 +85,16 @@ MyDebugFree ()
 }
 
 VOID
-MyDebugPrint (const unsigned char* format, ...)
+MyDebugPrint (ULONG level, const unsigned char* format, ...)
 {
+    va_list args;
+
+#if ALSO_DBGPRINT
+    va_start (args, format);
+    vDbgPrintEx (DPFLTR_IHVNETWORK_ID, level, format, args);
+    va_end (args);
+#endif
+
     if (g_Debug.text && g_Debug.capacity > 0 && CAN_WE_PRINT)
     {
         BOOLEAN owned;
@@ -85,15 +105,9 @@ MyDebugPrint (const unsigned char* format, ...)
 
             if (remaining > 0)
             {
-                va_list args;
                 NTSTATUS status;
                 char *end;
 
-#ifdef DBG_PRINT
-                va_start (args, format);
-                vDbgPrintEx (DPFLTR_IHVNETWORK_ID, DPFLTR_INFO_LEVEL, format, args);
-                va_end (args);
-#endif
                 va_start (args, format);
                 status = RtlStringCchVPrintfExA (g_Debug.text + g_Debug.out,
                     remaining,
@@ -102,9 +116,6 @@ MyDebugPrint (const unsigned char* format, ...)
                     STRSAFE_NO_TRUNCATION | STRSAFE_IGNORE_NULLS,
                     format,
                     args);
-                va_end (args);
-                va_start (args, format);
-                vDbgPrintEx(DPFLTR_IHVDRIVER_ID , 1, format, args);
                 va_end (args);
                 if (status == STATUS_SUCCESS)
                     g_Debug.out = (unsigned int) (end - g_Debug.text);
@@ -182,9 +193,9 @@ GetDebugLine (
 VOID
 PrMac (const MACADDR mac)
 {
-  DEBUGP (("%x:%x:%x:%x:%x:%x",
-	    mac[0], mac[1], mac[2],
-	    mac[3], mac[4], mac[5]));
+  DEBUGT ("%02X:%02X:%02X:%02X:%02X:%02X",
+        mac[0], mac[1], mac[2],
+        mac[3], mac[4], mac[5]);
 }
 
 VOID
@@ -192,8 +203,18 @@ PrIP (IPADDR ip_addr)
 {
   const unsigned char *ip = (const unsigned char *) &ip_addr;
 
-  DEBUGP (("%d.%d.%d.%d",
-	    ip[0], ip[1], ip[2], ip[3]));
+  DEBUGT ("%d.%d.%d.%d",
+        ip[0], ip[1], ip[2], ip[3]);
+}
+
+VOID
+PrIPV6 (IPV6ADDR ip_addr)
+{
+    DEBUGT("%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X:%02X%02X",
+        ip_addr[0], ip_addr[1], ip_addr[2], ip_addr[3],
+        ip_addr[4], ip_addr[5], ip_addr[6], ip_addr[7],
+        ip_addr[8], ip_addr[9], ip_addr[10], ip_addr[11],
+        ip_addr[12], ip_addr[13], ip_addr[14], ip_addr[15]);
 }
 
 const char *
@@ -201,6 +222,9 @@ PrIPProto (int proto)
 {
     switch (proto)
     {
+    case IPPROTO_HOPOPT:
+        return "HOPOPT";
+
     case IPPROTO_UDP:
         return "UDP";
 
@@ -213,6 +237,15 @@ PrIPProto (int proto)
     case IPPROTO_IGMP:
         return "IGMP";
 
+    case IPPROTO_ESP:
+        return "ESP";
+
+    case IPPROTO_AH:
+        return "AH";
+
+    case IPPROTO_ICMPV6:
+        return "ICMPV6";
+
     default:
         return "???";
     }
@@ -221,30 +254,30 @@ PrIPProto (int proto)
 VOID
 DumpARP (const char *prefix, const ARP_PACKET *arp)
 {
-  DEBUGP (("%s ARP src=", prefix));
+  DEBUGT ("%s ARP src=", prefix);
   PrMac (arp->m_MAC_Source);
-  DEBUGP ((" dest="));
+  DEBUGT (" dest=");
   PrMac (arp->m_MAC_Destination);
-  DEBUGP ((" OP=0x%04x",
-	    (int)ntohs(arp->m_ARP_Operation)));
-  DEBUGP ((" M=0x%04x(%d)",
-	    (int)ntohs(arp->m_MAC_AddressType),
-	    (int)arp->m_MAC_AddressSize));
-  DEBUGP ((" P=0x%04x(%d)",
-	    (int)ntohs(arp->m_PROTO_AddressType),
-	    (int)arp->m_PROTO_AddressSize));
+  DEBUGT (" OP=0x%04x",
+        (int)ntohs(arp->m_ARP_Operation));
+  DEBUGT (" M=0x%04x(%d)",
+        (int)ntohs(arp->m_MAC_AddressType),
+        (int)arp->m_MAC_AddressSize);
+  DEBUGT (" P=0x%04x(%d)",
+        (int)ntohs(arp->m_PROTO_AddressType),
+        (int)arp->m_PROTO_AddressSize);
 
-  DEBUGP ((" MacSrc="));
+  DEBUGT (" MacSrc=");
   PrMac (arp->m_ARP_MAC_Source);
-  DEBUGP ((" MacDest="));
+  DEBUGT (" MacDest=");
   PrMac (arp->m_ARP_MAC_Destination);
 
-  DEBUGP ((" IPSrc="));
+  DEBUGT (" IPSrc=");
   PrIP (arp->m_ARP_IP_Source);
-  DEBUGP ((" IPDest="));
+  DEBUGT (" IPDest=");
   PrIP (arp->m_ARP_IP_Destination);
 
-  DEBUGP (("\n"));
+  DEBUGT ("\n");
 }
 
 struct ethpayload
@@ -283,11 +316,12 @@ DumpPacket(
     )
 {
     const ETH_HEADER *eth = (const ETH_HEADER *) data;
-    const IPHDR *ip = (const IPHDR *) (data + sizeof (ETH_HEADER));
+    const IPHDR *ip = (const IPHDR *)(data + sizeof(ETH_HEADER));
+    const IPV6HDR *ip6 = (const IPV6HDR *) (data + sizeof (ETH_HEADER));
 
     if (len < sizeof (ETH_HEADER))
     {
-        DEBUGP (("%s TRUNCATED PACKET LEN=%d\n", prefix, len));
+        DEBUGE ("%s TRUNCATED PACKET LEN=%d\n", prefix, len);
         return;
     }
 
@@ -307,11 +341,11 @@ DumpPacket(
         const int blen = len - sizeof (ETH_HEADER);
         BOOLEAN did = FALSE;
 
-        DEBUGP (("%s IPv4 %s[%d]", prefix, PrIPProto (ip->protocol), len));
+        DEBUGT ("%s IPv4 %s[%d]", prefix, PrIPProto (ip->protocol), len);
 
         if (!(ntohs (ip->tot_len) == blen && hlen <= blen))
         {
-            DEBUGP ((" XXX"));
+            DEBUGT (" XXX\n");
             return;
         }
 
@@ -320,12 +354,12 @@ DumpPacket(
             && blen - hlen >= (sizeof (TCPHDR)))
         {
             const TCPHDR *tcp = (TCPHDR *) (data + sizeof (ETH_HEADER) + hlen);
-            DEBUGP ((" "));
+            DEBUGT (" ");
             PrIP (ip->saddr);
-            DEBUGP ((":%d", ntohs (tcp->source)));
-            DEBUGP ((" -> "));
+            DEBUGT (":%d", ntohs (tcp->source));
+            DEBUGT (" -> ");
             PrIP (ip->daddr);
-            DEBUGP ((":%d", ntohs (tcp->dest)));
+            DEBUGT (":%d", ntohs (tcp->dest));
             did = TRUE;
         }
 
@@ -360,36 +394,64 @@ DumpPacket(
 
             if (!did)
             {
-                DEBUGP ((" "));
+                DEBUGT (" ");
                 PrIP (ip->saddr);
-                DEBUGP ((":%d", ntohs (udp->source)));
-                DEBUGP ((" -> "));
+                DEBUGT (":%d", ntohs (udp->source));
+                DEBUGT (" -> ");
                 PrIP (ip->daddr);
-                DEBUGP ((":%d", ntohs (udp->dest)));
+                DEBUGT (":%d", ntohs (udp->dest));
                 did = TRUE;
             }
         }
 
         if (!did)
         {
-            DEBUGP ((" ipproto=%d ", ip->protocol));
+            DEBUGT (" ipproto=%d ", ip->protocol);
             PrIP (ip->saddr);
-            DEBUGP ((" -> "));
+            DEBUGT (" -> ");
             PrIP (ip->daddr);
         }
 
-        DEBUGP (("\n"));
+        DEBUGT ("\n");
+        return;
+    }
+
+    // IPv6 packet?
+    if (len >= (sizeof(IPV6HDR) + sizeof(ETH_HEADER))
+        && eth->proto == htons(ETH_P_IPV6)
+        && IPV6H_GET_VER(ip6->version_prio) == 6)
+    {
+        const int hlen = sizeof(IPV6HDR); // EXTENSIONS NOT SUPPORTED
+        const int blen = len - sizeof(ETH_HEADER);
+        const UDPTCPHDR *udptcp = (UDPTCPHDR *)(data + sizeof(ETH_HEADER) + hlen);
+
+        DEBUGT ("%s IPv6 %s[%d]", prefix, PrIPProto(ip6->nexthdr), len);
+
+        if (!((ntohs(ip6->payload_len) + hlen) == blen && hlen <= blen))
+        {
+            DEBUGT(" XXX\n");
+            return;
+        }
+
+        DEBUGT (" ");
+        PrIPV6 (ip6->saddr);
+        DEBUGT (":%d", ntohs (udptcp->source));
+        DEBUGT (" -> ");
+        PrIPV6 (ip6->daddr);
+        DEBUGT (":%d", ntohs (udptcp->dest));
+
+        DEBUGT("\n");
         return;
     }
 
     {
-        DEBUGP (("%s ??? src=", prefix));
+        DEBUGT ("%s ??? src=", prefix);
         PrMac (eth->src);
-        DEBUGP ((" dest="));
+        DEBUGT (" dest=");
         PrMac (eth->dest);
-        DEBUGP ((" proto=0x%04x len=%d\n",
+        DEBUGT (" proto=0x%04x len=%d\n",
             (int) ntohs(eth->proto),
-            len));
+            len);
     }
 }
 

@@ -153,7 +153,7 @@ udp_checksum (
     for (i = 0; i < 4; i += 2)
     {
         word16 =((dest_addr[i] << 8) & 0xFF00) + (dest_addr[i+1] & 0xFF);
-        sum += word16; 	
+        sum += word16;
     }
 
     // the protocol number and the length of the UDP packet
@@ -392,7 +392,7 @@ SendDHCPMsg(
 
     if (!(type == DHCPOFFER || type == DHCPACK || type == DHCPNAK))
     {
-        DEBUGP (("[TAP] SendDHCPMsg: Bad DHCP type: %d\n", type));
+        DEBUGE ("[TAP] SendDHCPMsg: Bad DHCP type: %d\n", type);
         return;
     }
 
@@ -456,7 +456,7 @@ SendDHCPMsg(
         }
         else
         {
-            DEBUGP (("[TAP] SendDHCPMsg: DHCP buffer overflow\n"));
+            DEBUGW ("[TAP] SendDHCPMsg: DHCP buffer overflow\n");
         }
 
         MemFree (pkt, sizeof (DHCPMsg));
@@ -623,86 +623,86 @@ DumpDHCP (
     const int optlen
     )
 {
-    DEBUGP ((" %s", message_op_text (dhcp->op)));
-    DEBUGP ((" %s ", message_type_text (GetDHCPMessageType (dhcp, optlen))));
+    DEBUGT (" %s", message_op_text (dhcp->op));
+    DEBUGT (" %s ", message_type_text (GetDHCPMessageType (dhcp, optlen)));
     PrIP (ip->saddr);
-    DEBUGP ((":%s[", port_name (ntohs (udp->source))));
+    DEBUGT (":%s[", port_name (ntohs (udp->source)));
     PrMac (eth->src);
-    DEBUGP (("] -> "));
+    DEBUGT ("] -> ");
     PrIP (ip->daddr);
-    DEBUGP ((":%s[", port_name (ntohs (udp->dest))));
+    DEBUGT (":%s[", port_name (ntohs (udp->dest)));
     PrMac (eth->dest);
-    DEBUGP (("]"));
+    DEBUGT ("]");
     if (dhcp->ciaddr)
     {
-        DEBUGP ((" ci="));
+        DEBUGT (" ci=");
         PrIP (dhcp->ciaddr);
     }
     if (dhcp->yiaddr)
     {
-        DEBUGP ((" yi="));
+        DEBUGT (" yi=");
         PrIP (dhcp->yiaddr);
     }
     if (dhcp->siaddr)
     {
-        DEBUGP ((" si="));
+        DEBUGT (" si=");
         PrIP (dhcp->siaddr);
     }
     if (dhcp->hlen == sizeof (MACADDR))
     {
-        DEBUGP ((" ch="));
+        DEBUGT (" ch=");
         PrMac (dhcp->chaddr);
     }
 
-    DEBUGP ((" xid=0x%08x", ntohl (dhcp->xid)));
+    DEBUGT (" xid=0x%08x", ntohl (dhcp->xid));
 
     if (ntohl (dhcp->magic) != 0x63825363)
-        DEBUGP ((" ma=0x%08x", ntohl (dhcp->magic)));
+        DEBUGT (" ma=0x%08x", ntohl (dhcp->magic));
     if (dhcp->htype != 1)
-        DEBUGP ((" htype=%d", dhcp->htype));
+        DEBUGT (" htype=%d", dhcp->htype);
     if (dhcp->hops)
-        DEBUGP ((" hops=%d", dhcp->hops));
+        DEBUGT (" hops=%d", dhcp->hops);
     if (ntohs (dhcp->secs))
-        DEBUGP ((" secs=%d", ntohs (dhcp->secs)));
+        DEBUGT (" secs=%d", ntohs (dhcp->secs));
     if (ntohs (dhcp->flags))
-        DEBUGP ((" flags=0x%04x", ntohs (dhcp->flags)));
+        DEBUGT (" flags=0x%04x", ntohs (dhcp->flags));
 
     // extra stuff
 
     if (ip->version_len != 0x45)
-        DEBUGP ((" vl=0x%02x", ip->version_len));
+        DEBUGT (" vl=0x%02x", ip->version_len);
     if (ntohs (ip->tot_len) != sizeof (IPHDR) + sizeof (UDPHDR) + sizeof (DHCP) + optlen)
-        DEBUGP ((" tl=%d", ntohs (ip->tot_len)));
+        DEBUGT (" tl=%d", ntohs (ip->tot_len));
     if (ntohs (udp->len) != sizeof (UDPHDR) + sizeof (DHCP) + optlen)
-        DEBUGP ((" ul=%d", ntohs (udp->len)));
+        DEBUGT (" ul=%d", ntohs (udp->len));
 
     if (ip->tos)
-        DEBUGP ((" tos=0x%02x", ip->tos));
+        DEBUGT (" tos=0x%02x", ip->tos);
     if (ntohs (ip->id))
-        DEBUGP ((" id=0x%04x", ntohs (ip->id)));
+        DEBUGT (" id=0x%04x", ntohs (ip->id));
     if (ntohs (ip->frag_off))
-        DEBUGP ((" frag_off=0x%04x", ntohs (ip->frag_off)));
+        DEBUGT (" frag_off=0x%04x", ntohs (ip->frag_off));
 
-    DEBUGP ((" ttl=%d", ip->ttl));
-    DEBUGP ((" ic=0x%04x [0x%04x]", ntohs (ip->check),
-        ip_checksum ((UCHAR*)ip, sizeof (IPHDR))));
-    DEBUGP ((" uc=0x%04x [0x%04x/%d]", ntohs (udp->check),
+    DEBUGT (" ttl=%d", ip->ttl);
+    DEBUGT (" ic=0x%04x [0x%04x]", ntohs (ip->check),
+        ip_checksum ((UCHAR*)ip, sizeof (IPHDR)));
+    DEBUGT (" uc=0x%04x [0x%04x/%d]", ntohs (udp->check),
         udp_checksum ((UCHAR *) udp,
         sizeof (UDPHDR) + sizeof (DHCP) + optlen,
         (UCHAR *) &ip->saddr,
         (UCHAR *) &ip->daddr),
-        optlen));
+        optlen);
 
     // Options
     {
         const UCHAR *opt = (UCHAR *) (dhcp + 1);
         int i;
 
-        DEBUGP ((" OPT"));
+        DEBUGT (" OPT");
         for (i = 0; i < optlen; ++i)
         {
             const UCHAR data = opt[i];
-            DEBUGP ((".%d", data));
+            DEBUGT (".%d", data);
         }
     }
 }

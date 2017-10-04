@@ -110,8 +110,8 @@ tapPacketQueueInsertTail(
     {
         TapPacketQueue->MaxCount = TapPacketQueue->Count;
 
-        DEBUGP (("[TAP] tapPacketQueueInsertTail: New MAX queued packet count = %d\n",
-            TapPacketQueue->MaxCount));
+        DEBUGT ("[TAP] tapPacketQueueInsertTail: New MAX queued packet count = %d\n",
+            TapPacketQueue->MaxCount);
     }
 
     KeReleaseSpinLock(&TapPacketQueue->QueueLock,irql);
@@ -175,8 +175,8 @@ tapIrpCsqInsert (
     {
         tapIrpCsq->MaxCount = tapIrpCsq->Count;
 
-        DEBUGP (("[TAP] tapIrpCsqInsert: New MAX queued IRP count = %d\n",
-            tapIrpCsq->MaxCount));
+        DEBUGT ("[TAP] tapIrpCsqInsert: New MAX queued IRP count = %d\n",
+            tapIrpCsq->MaxCount);
     }
 }
 

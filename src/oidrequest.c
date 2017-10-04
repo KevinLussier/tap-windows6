@@ -199,11 +199,11 @@ DBG_PRINT_OID_NAME(
 
     if (oidName)
     {
-        DEBUGP(("OID: %s", oidName));
+        DEBUGT("OID: %s", oidName);
     }
     else
     {
-        DEBUGP(("<** Unknown OID 0x%08x **>\n", Oid));
+        DEBUGT("<** Unknown OID 0x%08x **>\n", Oid);
     }
 }
 
@@ -270,7 +270,7 @@ tapSetPacketFilter(
     // any bits not supported?
     if (PacketFilter & ~(TAP_SUPPORTED_FILTERS))
     {
-        DEBUGP (("[TAP] Unsupported packet filter: 0x%08x\n", PacketFilter));
+        DEBUGW ("[TAP] Unsupported packet filter: 0x%08x\n", PacketFilter);
         status = NDIS_STATUS_NOT_SUPPORTED;
     }
     else
@@ -314,7 +314,7 @@ Return Value:
 {
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
 
-    DEBUGP (("[TAP] PowerState: Fully powered\n"));
+    DEBUGT ("[TAP] PowerState: Fully powered\n");
 
     // Start data path...
 
@@ -357,7 +357,7 @@ Return Value:
 {
     NDIS_STATUS status = NDIS_STATUS_SUCCESS;
 
-    DEBUGP (("[TAP] PowerState: Low-power\n"));
+    DEBUGT ("[TAP] PowerState: Low-power\n");
 
     //
     // Miniport drivers NDIS v6.20 and below are 
