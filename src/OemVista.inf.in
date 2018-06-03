@@ -106,10 +106,10 @@
 [@PRODUCT_TAP_WIN_COMPONENT_ID@.params.reg]
    HKR, Ndi\params\MTU,                  ParamDesc, 0, "MTU"
    HKR, Ndi\params\MTU,                  Type,      0, "int"
-   HKR, Ndi\params\MTU,                  Default,   0, "1500"
+   HKR, Ndi\params\MTU,                  Default,   0, "1400"
    HKR, Ndi\params\MTU,                  Optional,  0, "0"
-   HKR, Ndi\params\MTU,                  Min,       0, "100"
-   HKR, Ndi\params\MTU,                  Max,       0, "1500"
+   HKR, Ndi\params\MTU,                  Min,       0, "576"
+   HKR, Ndi\params\MTU,                  Max,       0, "1400"
    HKR, Ndi\params\MTU,                  Step,      0, "1"
    HKR, Ndi\params\MediaStatus,          ParamDesc, 0, "Media Status"
    HKR, Ndi\params\MediaStatus,          Type,      0, "enum"
