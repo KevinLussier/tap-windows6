@@ -204,6 +204,114 @@ tapReadPermanentAddress(
     }
 }
 
+ULONG
+tapReadInteger(
+    __in PTAP_ADAPTER_CONTEXT   Adapter,
+    __in NDIS_HANDLE            ConfigHandle,
+    __in char *                 SubKey,
+    __in char *                 Name,
+    __in ULONG                  Default
+    )
+{
+    NDIS_HANDLE readHandle = ConfigHandle;
+    NDIS_STATUS status;
+    NDIS_CONFIGURATION_PARAMETER *paramValue;
+    NDIS_STRING subkeyString;
+    NDIS_STRING nameString;
+    BOOLEAN usingSubKey = SubKey != NULL && SubKey[0] != 0;
+    ULONG result = Default;
+
+    if ( usingSubKey )
+    {
+        NdisInitializeString( &subkeyString, (PUCHAR)SubKey );
+
+        NdisOpenConfigurationKeyByName(
+            &status,
+            ConfigHandle,
+            &subkeyString,
+            &readHandle );
+
+        NdisFreeString( subkeyString );
+
+        if ( status != NDIS_STATUS_SUCCESS )
+        {
+            DEBUGT( "[%s] Failed to open subkey '%s' - error 0x%08lx\n", MINIPORT_INSTANCE_ID( Adapter ), SubKey, status );
+            return result;
+        }
+    }
+
+    NdisInitializeString( &nameString, (PUCHAR)Name );
+
+    NdisReadConfiguration(
+        &status,
+        &paramValue,
+        readHandle,
+        &nameString,
+        NdisParameterInteger
+    );
+
+    NdisFreeString( nameString );
+
+    if ( status == NDIS_STATUS_SUCCESS )
+    {
+        if ( paramValue->ParameterType == NdisParameterInteger )
+        {
+            result = paramValue->ParameterData.IntegerData;
+        }
+        else
+        {
+            DEBUGT( "[%s] Value of '%s' is not an integer\n", MINIPORT_INSTANCE_ID( Adapter ), Name );
+        }
+    }
+    else if ( status != NDIS_STATUS_FAILURE )
+    {
+        DEBUGT( "[%s] Failed to read value of '%s' - error 0x%08X\n", MINIPORT_INSTANCE_ID( Adapter ), Name, status );
+    }
+
+    if ( readHandle != ConfigHandle )
+    {
+        NdisCloseConfiguration( readHandle );
+    }
+
+    return result;
+}
+
+BOOLEAN
+tapReadBoolean(
+    __in PTAP_ADAPTER_CONTEXT   Adapter,
+    __in NDIS_HANDLE            ConfigHandle,
+    __in char *                 SubKey,
+    __in char *                 Name,
+    __in BOOLEAN                Default
+    )
+{
+    return tapReadInteger( Adapter, ConfigHandle, SubKey, Name, Default == FALSE ? 0 : 1 ) == 0 ? FALSE : TRUE;
+}
+
+VOID
+tapReadMTU(
+    __in PTAP_ADAPTER_CONTEXT   Adapter,
+    __in NDIS_HANDLE            ConfigurationHandle,
+    __out ULONG *               MTU
+    )
+{
+    ULONG defaultMTU, minMTU, maxMTU;
+
+    defaultMTU = tapReadInteger( Adapter, ConfigurationHandle, "Ndi\\params\\MTU", "Default", ETHERNET_MTU );
+    minMTU = tapReadInteger( Adapter, ConfigurationHandle, "Ndi\\params\\MTU", "Min", MINIMUM_MTU );
+    maxMTU = tapReadInteger( Adapter, ConfigurationHandle, "Ndi\\params\\MTU", "Max", MAXIMUM_MTU );
+    *MTU = tapReadInteger( Adapter, ConfigurationHandle, NULL, "MTU", defaultMTU );
+
+    if ( *MTU < minMTU )
+    {
+        *MTU = minMTU;
+    }
+    else if ( *MTU > maxMTU )
+    {
+        *MTU = maxMTU;
+    }
+}
+
 NDIS_STATUS
 tapReadConfiguration(
     __in PTAP_ADAPTER_CONTEXT     Adapter
@@ -318,47 +426,12 @@ tapReadConfiguration(
 
         if (status == NDIS_STATUS_SUCCESS)
         {
-            NDIS_STATUS localStatus;    // Use default if these fail.
-            NDIS_CONFIGURATION_PARAMETER *configParameter;
-            NDIS_STRING mtuKey = NDIS_STRING_CONST("MTU");
-            NDIS_STRING mediaStatusKey = NDIS_STRING_CONST("MediaStatus");
-#if ENABLE_NONADMIN
-            NDIS_STRING allowNonAdminKey = NDIS_STRING_CONST("AllowNonAdmin");
-#endif
-
-            // Read MTU from the registry.
-            NdisReadConfiguration (
-                &localStatus,
-                &configParameter,
+            // Read the MTU setting from registry.
+            tapReadMTU(
+                Adapter,
                 configHandle,
-                &mtuKey,
-                NdisParameterInteger
+                &Adapter->MtuSize
                 );
-
-            if (localStatus == NDIS_STATUS_SUCCESS)
-            {
-                if (configParameter->ParameterType == NdisParameterInteger)
-                {
-                    int mtu = configParameter->ParameterData.IntegerData;
-
-                    if(mtu == 0)
-                    {
-                        mtu = ETHERNET_MTU;
-                    }
-
-                    // Sanity check
-                    if (mtu < MINIMUM_MTU)
-                    {
-                        mtu = MINIMUM_MTU;
-                    }
-                    else if (mtu > MAXIMUM_MTU)
-                    {
-                        mtu = MAXIMUM_MTU;
-                    }
-
-                    Adapter->MtuSize = mtu;
-                }
-            }
 
             DEBUGT ("[%s] Using MTU %d\n",
                 MINIPORT_INSTANCE_ID (Adapter),
@@ -366,37 +439,26 @@ tapReadConfiguration(
                 );
 
             // Read MediaStatus setting from registry.
-            NdisReadConfiguration (
-                &localStatus,
-                &configParameter,
+            Adapter->MediaStateAlwaysConnected =
+            Adapter->LogicalMediaState = tapReadBoolean(
+                Adapter,
                 configHandle,
-                &mediaStatusKey,
-                NdisParameterInteger
+                NULL,
+                "MediaStatus",
+                FALSE
                 );
 
-            if (localStatus == NDIS_STATUS_SUCCESS)
+            if ( !Adapter->MediaStateAlwaysConnected )
             {
-                if (configParameter->ParameterType == NdisParameterInteger)
-                {
-                    if(configParameter->ParameterData.IntegerData == 0)
-                    {
-                        // Connect state is appplication controlled.
-                        DEBUGT("[%s] Initial MediaConnectState: Application Controlled\n",
-                            MINIPORT_INSTANCE_ID (Adapter));
-
-                        Adapter->MediaStateAlwaysConnected = FALSE;
-                        Adapter->LogicalMediaState = FALSE;
-                    }
-                    else
-                    {
-                        // Connect state is always connected.
-                        DEBUGT("[%s] Initial MediaConnectState: Always Connected\n",
-                            MINIPORT_INSTANCE_ID (Adapter));
-
-                        Adapter->MediaStateAlwaysConnected = TRUE;
-                        Adapter->LogicalMediaState = TRUE;
-                    }
-                }
+                // Connect state is appplication controlled.
+                DEBUGT( "[%s] MediaConnectState will be application controlled\n",
+                        MINIPORT_INSTANCE_ID( Adapter ) );
+            }
+            else
+            {
+                // Connect state is always connected.
+                DEBUGT( "[%s] MediaConnectState will be always connected\n",
+                        MINIPORT_INSTANCE_ID( Adapter ) );
             }
 
             // Read MAC PermanentAddress setting from registry.
@@ -429,20 +491,23 @@ tapReadConfiguration(
 
             // Read optional AllowNonAdmin setting from registry.
 #if ENABLE_NONADMIN
-            NdisReadConfiguration (
-                &localStatus,
-                &configParameter,
+            Adapter->AllowNonAdmin = tapReadBoolean(
+                Adapter,
                 configHandle,
-                &allowNonAdminKey,
-                NdisParameterInteger
+                NULL,
+                "AllowNonAdmin",
+                FALSE
                 );
 
-            if (localStatus == NDIS_STATUS_SUCCESS)
+            if ( Adapter->AllowNonAdmin )
             {
-                if (configParameter->ParameterType == NdisParameterInteger)
-                {
-                    Adapter->AllowNonAdmin = TRUE;
-                }
+                DEBUGT( "[%s] Non-admin control is allowed\n",
+                        MINIPORT_INSTANCE_ID( Adapter ) );
+            }
+            else
+            {
+                DEBUGT( "[%s] Non-admin control is not allowed\n",
+                        MINIPORT_INSTANCE_ID( Adapter ) );
             }
 #endif
         }
@@ -702,7 +767,7 @@ AdapterCreate(
         // Specifiy the maximum network frame size, in bytes, that the NIC
         // supports excluding the header.
         //
-        genAttributes.MtuSize = TAP_FRAME_MAX_DATA_SIZE;
+        genAttributes.MtuSize = adapter->MtuSize;
         genAttributes.MaxXmitLinkSpeed = TAP_XMIT_SPEED;
         genAttributes.XmitLinkSpeed = TAP_XMIT_SPEED;
         genAttributes.MaxRcvLinkSpeed = TAP_RECV_SPEED;
@@ -742,7 +807,7 @@ AdapterCreate(
         // packets on every indication. Consequently, this value is identical
         // to that returned for OID_GEN_RECEIVE_BLOCK_SIZE.
         //
-        genAttributes.LookaheadSize = TAP_MAX_LOOKAHEAD;
+        genAttributes.LookaheadSize = adapter->MtuSize;
         genAttributes.MacOptions = TAP_MAC_OPTIONS;
         genAttributes.SupportedPacketFilters = TAP_SUPPORTED_FILTERS;
 
