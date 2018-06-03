@@ -611,15 +611,16 @@ Return Value:
         // network that are longer than the packet size specified by
         // OID_GEN_MAXIMUM_TOTAL_SIZE.
         //
-
-        __fallthrough;
+        ulInfo = (ULONG)Adapter->MtuSize + ETHERNET_HEADER_SIZE;
+        pInfo = &ulInfo;
+        break;
 
     case OID_GEN_TRANSMIT_BLOCK_SIZE:
         //
         // The OID_GEN_TRANSMIT_BLOCK_SIZE OID specifies the minimum
         // number of bytes that a single net packet occupies in the
-        // transmit buffer space of the NIC. In our case, the transmit
-        // block size is identical to its maximum packet size.
+        // transmit buffer space of the NIC.
+        //
         __fallthrough;
 
     case OID_GEN_RECEIVE_BLOCK_SIZE:
@@ -628,7 +629,7 @@ Return Value:
         // storage, in bytes, that a single packet occupies in the receive
         // buffer space of the NIC.
         //
-        ulInfo = (ULONG) TAP_MAX_FRAME_SIZE;
+        ulInfo = (ULONG)Adapter->MtuSize;
         pInfo = &ulInfo;
         break;
 
