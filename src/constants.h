@@ -71,17 +71,11 @@
 #define ETHERNET_HEADER_SIZE        (sizeof (ETH_HEADER))
 #define ETHERNET_MTU                1500
 #define ETHERNET_PACKET_SIZE        (ETHERNET_MTU + ETHERNET_HEADER_SIZE)
-#define DEFAULT_PACKET_LOOKAHEAD    (ETHERNET_PACKET_SIZE)
 #define VLAN_TAG_SIZE               4
 
 //===========================================================
 // Medium properties
 //===========================================================
-
-#define TAP_FRAME_HEADER_SIZE       ETHERNET_HEADER_SIZE
-#define TAP_FRAME_MAX_DATA_SIZE     ETHERNET_MTU
-#define TAP_MAX_FRAME_SIZE          (TAP_FRAME_HEADER_SIZE + TAP_FRAME_MAX_DATA_SIZE)
-#define TAP_MIN_FRAME_SIZE          60
 
 #define TAP_MEDIUM_TYPE             NdisMedium802_3
 
@@ -109,9 +103,6 @@
 
 // Max number of multicast addresses supported in hardware
 #define TAP_MAX_MCAST_LIST                 32
-
-#define TAP_MAX_LOOKAHEAD                  TAP_FRAME_MAX_DATA_SIZE
-#define TAP_BUFFER_SIZE                    TAP_MAX_FRAME_SIZE
 
 // Set this value to TRUE if there is a physical adapter.
 #define TAP_HAS_PHYSICAL_CONNECTOR         FALSE
