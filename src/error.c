@@ -283,7 +283,7 @@ DumpARP (const char *prefix, const ARP_PACKET *arp)
 struct ethpayload
 {
   ETH_HEADER eth;
-  UCHAR payload[DEFAULT_PACKET_LOOKAHEAD];
+  UCHAR payload[ETHERNET_PACKET_SIZE];
 };
 
 #ifdef ALLOW_PACKET_DUMP
@@ -299,8 +299,8 @@ DumpPacket2(
     struct ethpayload *ep = (struct ethpayload *) MemAlloc (sizeof (struct ethpayload), TRUE);
     if (ep)
     {
-        if (len > DEFAULT_PACKET_LOOKAHEAD)
-            len = DEFAULT_PACKET_LOOKAHEAD;
+        if ( len > ETHERNET_PACKET_SIZE )
+            len = ETHERNET_PACKET_SIZE;
         ep->eth = *eth;
         NdisMoveMemory (ep->payload, data, len);
         DumpPacket (prefix, (unsigned char *) ep, sizeof (ETH_HEADER) + len);
